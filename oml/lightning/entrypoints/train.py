@@ -52,7 +52,9 @@ def get_retrieval_loaders(cfg: TCfg) -> Tuple[DataLoader, DataLoader]:
             num_workers=cfg["num_workers"],
         )
 
-    loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
+    loader_val = DataLoader(
+        dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"]
+    )
 
     return loader_train, loader_val
 
@@ -80,7 +82,10 @@ def pl_train(cfg: TCfg) -> None:
 
     loader_train, loaders_val = get_retrieval_loaders(cfg)
     extractor = get_extractor_by_cfg(cfg["model"])
-    criterion = get_criterion_by_cfg(cfg["criterion"], **{"label2category": loader_train.dataset.get_label2category()})
+    criterion = get_criterion_by_cfg(
+        cfg["criterion"],
+        **{"label2category": loader_train.dataset.get_label2category()},
+    )
     optimizable_parameters = [
         {"lr": cfg["optimizer"]["args"]["lr"], "params": extractor.parameters()},
         {"lr": cfg["optimizer"]["args"]["lr"], "params": criterion.parameters()},
@@ -90,7 +95,9 @@ def pl_train(cfg: TCfg) -> None:
     module_kwargs = {}
     module_kwargs.update(parse_scheduler_from_config(cfg, optimizer=optimizer))
     if is_ddp:
-        module_kwargs.update({"loaders_train": loader_train, "loaders_val": loaders_val})
+        module_kwargs.update(
+            {"loaders_train": loader_train, "loaders_val": loaders_val}
+        )
         module_constructor = RetrievalModuleDDP
     else:
         module_constructor = RetrievalModule  # type: ignore
@@ -132,6 +139,7 @@ def pl_train(cfg: TCfg) -> None:
         enable_model_summary=True,
         callbacks=[metrics_clb, parse_ckpt_callback_from_config(cfg)],
         logger=logger,
+        log_every_n_steps=cfg["log_every_n_steps"],
         precision=cfg.get("precision", 32),
         **trainer_engine_params,
     )
@@ -139,7 +147,9 @@ def pl_train(cfg: TCfg) -> None:
     if is_ddp:
         trainer.fit(model=pl_module)
     else:
-        trainer.fit(model=pl_module, train_dataloaders=loader_train, val_dataloaders=loaders_val)
+        trainer.fit(
+            model=pl_module, train_dataloaders=loader_train, val_dataloaders=loaders_val
+        )
 
 
 __all__ = ["pl_train"]
