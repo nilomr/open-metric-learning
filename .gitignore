@@ -3,6 +3,7 @@
 *.idea/*
 .env
 dataset
+examples/datasets/
 lightning_logs/
 notebooks/
 dist/*
