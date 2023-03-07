@@ -2,6 +2,8 @@ from typing import Any, Dict
 
 from oml.transforms.images.albumentations.transforms import (
     get_augs_albu,
+    get_greti_augs_train,
+    get_greti_augs_val,
     get_normalisation_albu,
     get_normalisation_resize_albu,
     get_normalisation_resize_albu_clip,
@@ -17,6 +19,8 @@ from oml.transforms.images.utils import TTransforms
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 TRANSFORMS_ALBU = {
+    "greti_augs_train": get_greti_augs_train,
+    "greti_augs_val": get_greti_augs_val,
     "augs_albu": get_augs_albu,
     "norm_albu": get_normalisation_albu,
     "norm_resize_albu": get_normalisation_resize_albu,
