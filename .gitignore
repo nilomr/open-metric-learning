@@ -4,6 +4,7 @@
 .env
 dataset
 examples/datasets/
+great-tit-train/datasets/
 lightning_logs/
 notebooks/
 dist/*
