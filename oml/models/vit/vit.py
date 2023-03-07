@@ -18,6 +18,7 @@ from oml.models.vit.hubconf import (  # type: ignore
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.io import download_checkpoint_one_of
 from oml.utils.misc_torch import normalise
+import cv2
 
 _FB_URL = "https://dl.fbaipublicfiles.com"
 
@@ -28,32 +29,65 @@ class ViTExtractor(IExtractor):
 
     """
 
-    constructors = {"vits8": dino_vits8, "vits16": dino_vits16, "vitb8": dino_vitb8, "vitb16": dino_vitb16}
+    constructors = {
+        "vits8": dino_vits8,
+        "vits16": dino_vits16,
+        "vitb8": dino_vitb8,
+        "vitb16": dino_vitb16,
+    }
 
     pretrained_models = {
         # checkpoints pretrained in DINO framework on ImageNet by MetaAI
-        "vits16_dino": (f"{_FB_URL}/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth", "cf0f22", None),
-        "vits8_dino": (f"{_FB_URL}/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth", "230cd5", None),
-        "vitb16_dino": (f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth", "552daf", None),
-        "vitb8_dino": (f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth", "556550", None),
+        "vits16_dino": (
+            f"{_FB_URL}/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth",
+            "cf0f22",
+            None,
+        ),
+        "vits8_dino": (
+            f"{_FB_URL}/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth",
+            "230cd5",
+            None,
+        ),
+        "vitb16_dino": (
+            f"{_FB_URL}/dino/dino_vitbase16_pretrain/dino_vitbase16_pretrain.pth",
+            "552daf",
+            None,
+        ),
+        "vitb8_dino": (
+            f"{_FB_URL}/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth",
+            "556550",
+            None,
+        ),
         # our pretrained checkpoints
         "vits16_inshop": (
-            [f"{STORAGE_CKPTS}/inshop/vits16_inshop_a76b85.ckpt", "1niX-TC8cj6j369t7iU2baHQSVN3MVJbW"],
+            [
+                f"{STORAGE_CKPTS}/inshop/vits16_inshop_a76b85.ckpt",
+                "1niX-TC8cj6j369t7iU2baHQSVN3MVJbW",
+            ],
             "a76b85",
             "vits16_inshop.ckpt",
         ),
         "vits16_sop": (
-            [f"{STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt", "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A"],
+            [
+                f"{STORAGE_CKPTS}/sop/vits16_sop_21e743.ckpt",
+                "1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A",
+            ],
             "21e743",
             "vits16_sop.ckpt",
         ),
         "vits16_cub": (
-            [f"{STORAGE_CKPTS}/cub/vits16_cub.ckpt", "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G"],
+            [
+                f"{STORAGE_CKPTS}/cub/vits16_cub.ckpt",
+                "1p2tUosFpGXh5sCCdzlXtjV87kCDfG34G",
+            ],
             "e82633",
             "vits16_cub.ckpt",
         ),
         "vits16_cars": (
-            [f"{STORAGE_CKPTS}/cars/vits16_cars.ckpt", "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg"],
+            [
+                f"{STORAGE_CKPTS}/cars/vits16_cars.ckpt",
+                "1hcOxDRRXrKr6ZTCyBauaY8Ue-pok4Icg",
+            ],
             "9f1e59",
             "vits16_cars.ckpt",
         ),
@@ -127,7 +161,9 @@ class ViTExtractor(IExtractor):
             if s == 1:
                 inp = samples.clone()
             else:
-                inp = nn.functional.interpolate(samples, scale_factor=s, mode="bilinear", align_corners=False)
+                inp = nn.functional.interpolate(
+                    samples, scale_factor=s, mode="bilinear", align_corners=False
+                )
             feats = self.model.forward(inp).clone()
             v += feats
 
@@ -143,7 +179,9 @@ class ViTExtractor(IExtractor):
         return vis_vit(vit=self, image=image)
 
 
-def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD) -> np.ndarray:
+def vis_vit(
+    vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD
+) -> np.ndarray:
     vit.eval()
 
     patch_size = vit.model.patch_embed.proj.kernel_size[0]
@@ -176,9 +214,11 @@ def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: 
         .numpy()
     )
 
-    arr = sum(attentions[i] * 1 / attentions.shape[0] for i in range(attentions.shape[0]))
+    arr = sum(
+        attentions[i] * 1 / attentions.shape[0] for i in range(attentions.shape[0])
+    )
 
-    arr = show_cam_on_image(image / image.max(), 0.6 * arr / arr.max())  # type: ignore
+    arr = show_cam_on_image(image / image.max(), 0.6 * arr / arr.max(), colormap=cv2.COLORMAP_MAGMA, image_weight=0.6)  # type: ignore
 
     return arr
 
