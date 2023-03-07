@@ -12,7 +12,9 @@ TTransformsList = List[Union[albu.ImageOnlyTransform, albu.DualTransform]]
 
 def get_spatials() -> TTransformsList:
     spatial_augs = [
-        albu.Perspective(scale=(0.06, 0.07), pad_mode=cv2.BORDER_CONSTANT, pad_val=PAD_COLOR),
+        albu.Perspective(
+            scale=(0.06, 0.07), pad_mode=cv2.BORDER_CONSTANT, pad_val=PAD_COLOR
+        ),
         albu.Affine(
             scale=None,
             rotate=(-0.1, +0.1),
@@ -53,7 +55,9 @@ def get_colors_level() -> TTransformsList:
 
 def get_noises() -> TTransformsList:
     noise_augs = [
-        albu.CoarseDropout(max_holes=3, max_height=20, max_width=20, fill_value=PAD_COLOR, p=0.3),
+        albu.CoarseDropout(
+            max_holes=3, max_height=20, max_width=20, fill_value=PAD_COLOR, p=0.3
+        ),
         albu.GaussNoise(p=0.7),
     ]
     return noise_augs
@@ -72,7 +76,9 @@ class Crop:
     def __init__(self, crop_key: str = CROP_KEY):
         self.crop_key = crop_key
 
-    def __call__(self, image: np.ndarray, **kwargs: Dict[str, Any]) -> Dict[str, np.ndarray]:
+    def __call__(
+        self, image: np.ndarray, **kwargs: Dict[str, Any]
+    ) -> Dict[str, np.ndarray]:
         x1, y1, x2, y2 = kwargs[self.crop_key]
         return {"image": image[y1:y2, x1:x2, :]}  # type: ignore
 
@@ -90,11 +96,19 @@ class RandomSizedBBoxSafeCropPatched:
     def __init__(self, size: int, erosion_rate: float, crop_key: str = CROP_KEY):
         self.crop_key = crop_key
         self.transform = albu.Compose(
-            [albu.RandomSizedBBoxSafeCrop(width=size, height=size, erosion_rate=erosion_rate)],
-            bbox_params=albu.BboxParams(format="pascal_voc", label_fields=["label_field"]),
+            [
+                albu.RandomSizedBBoxSafeCrop(
+                    width=size, height=size, erosion_rate=erosion_rate
+                )
+            ],
+            bbox_params=albu.BboxParams(
+                format="pascal_voc", label_fields=["label_field"]
+            ),
         )
 
-    def __call__(self, image: np.ndarray, **kwargs: Dict[str, Any]) -> Dict[str, np.ndarray]:
+    def __call__(
+        self, image: np.ndarray, **kwargs: Dict[str, Any]
+    ) -> Dict[str, np.ndarray]:
         x1, y1, x2, y2 = kwargs[self.crop_key]
         output = self.transform(image=image, bboxes=[[x1, y1, x2, y2]], label_field=[1])
         return {"image": output["image"]}
@@ -103,11 +117,18 @@ class RandomSizedBBoxSafeCropPatched:
         return {**self.transform._to_dict(), **{"crop_key": self.crop_key}}
 
 
-def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
+def get_augs_albu(
+    im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD
+) -> albu.Compose:
     augs = albu.Compose(
         [
             albu.LongestMaxSize(max_size=im_size),
-            albu.PadIfNeeded(min_height=im_size, min_width=im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
+            albu.PadIfNeeded(
+                min_height=im_size,
+                min_width=im_size,
+                border_mode=cv2.BORDER_CONSTANT,
+                value=PAD_COLOR,
+            ),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials(), p=0.5),
             albu.OneOf(get_blurs(), p=0.5),
@@ -121,15 +142,68 @@ def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) 
     return augs
 
 
-def get_normalisation_albu(mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
+def get_greti_augs_train(
+    im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD
+) -> albu.Compose:
+    augs = albu.Compose(
+        [
+            albu.RandomCrop(im_size, im_size),
+            albu.CoarseDropout(
+                max_holes=4, max_height=20, max_width=20, fill_value=PAD_COLOR, p=0.4
+            ),
+            albu.GaussNoise(p=0.7),
+            albu.ISONoise(p=0.7),
+            albu.MultiplicativeNoise(p=0.7),
+            albu.CLAHE(p=0.2),
+            albu.Sharpen(p=0.2),
+            albu.Emboss(p=0.2),
+            albu.RandomBrightnessContrast(p=0.4),
+            albu.ShiftScaleRotate(
+                shift_limit=0.05,
+                scale_limit=0.05,
+                rotate_limit=2,
+                interpolation=cv2.INTER_LINEAR,
+                border_mode=cv2.BORDER_CONSTANT,
+                value=PAD_COLOR,
+                p=0.3,
+            ),
+            albu.Normalize(mean=mean, std=std),
+            ToTensorV2(),
+        ],
+    )
+    return augs
+
+
+def get_greti_augs_val(
+    im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD
+) -> albu.Compose:
+    return albu.Compose(
+        [
+            albu.RandomCrop(im_size, im_size),
+            albu.Normalize(mean=mean, std=std),
+            ToTensorV2(),
+        ]
+    )
+
+
+def get_normalisation_albu(
+    mean: TNormParam = MEAN, std: TNormParam = STD
+) -> albu.Compose:
     return albu.Compose([albu.Normalize(mean=mean, std=std), ToTensorV2()])
 
 
-def get_normalisation_resize_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
+def get_normalisation_resize_albu(
+    im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD
+) -> albu.Compose:
     return albu.Compose(
         [
             albu.LongestMaxSize(max_size=im_size),
-            albu.PadIfNeeded(min_height=im_size, min_width=im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
+            albu.PadIfNeeded(
+                min_height=im_size,
+                min_width=im_size,
+                border_mode=cv2.BORDER_CONSTANT,
+                value=PAD_COLOR,
+            ),
             albu.Normalize(mean=mean, std=std),
             ToTensorV2(),
         ]
@@ -141,6 +215,8 @@ def get_normalisation_resize_albu_clip(im_size: int) -> albu.Compose:
 
 
 __all__ = [
+    "get_greti_augs_train",
+    "get_greti_augs_val",
     "get_augs_albu",
     "get_normalisation_albu",
     "get_normalisation_resize_albu",
