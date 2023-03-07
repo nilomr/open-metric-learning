@@ -14,6 +14,7 @@ from oml.lightning.entrypoints.parser import (
 )
 from oml.lightning.modules.retrieval import RetrievalModule, RetrievalModuleDDP
 from oml.metrics.embeddings import EmbeddingMetrics, EmbeddingMetricsDDP
+from oml.models.vit.vit import ViTExtractor
 from oml.registry.models import get_extractor_by_cfg
 from oml.registry.postprocessors import get_postprocessor_by_cfg
 from oml.registry.transforms import get_transforms_by_cfg
@@ -40,9 +41,23 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         transforms_val=get_transforms_by_cfg(cfg["transforms_val"]),
         dataframe_name=cfg["dataframe_name"],
     )
-    loader_val = DataLoader(dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"])
+    loader_val = DataLoader(
+        dataset=valid_dataset, batch_size=cfg["bs_val"], num_workers=cfg["num_workers"]
+    )
 
-    extractor = get_extractor_by_cfg(cfg["model"])
+    # REVIEW: This is a hack to load custom weights, will be fixed in the future
+    try:
+        print(cfg["model"])
+        if cfg["model"]["args"]["weights"] == "custom":
+            extractor = ViTExtractor(
+                str(cfg["model"]["args"]["weights_path"]),
+                "vits16",
+                normalise_features=False,
+            )
+        else:
+            extractor = get_extractor_by_cfg(cfg["model"])
+    except:
+        extractor = get_extractor_by_cfg(cfg["model"])
 
     module_kwargs = {}
     if is_ddp:
@@ -61,7 +76,11 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         **module_kwargs
     )
 
-    postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
+    postprocessor = (
+        None
+        if not cfg.get("postprocessor", None)
+        else get_postprocessor_by_cfg(cfg["postprocessor"])
+    )
 
     # Note! We add the link to our model to a Lightning's Module, so it can recognize it and manipulate its devices
     pl_model.model_link_ = getattr(postprocessor, "model", None)
@@ -83,7 +102,11 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         log_images=False,
     )
 
-    trainer = pl.Trainer(callbacks=[clb_metric], precision=cfg.get("precision", 32), **trainer_engine_params)
+    trainer = pl.Trainer(
+        callbacks=[clb_metric],
+        precision=cfg.get("precision", 32),
+        **trainer_engine_params
+    )
 
     if is_ddp:
         logs = trainer.validate(verbose=True, model=pl_model)
