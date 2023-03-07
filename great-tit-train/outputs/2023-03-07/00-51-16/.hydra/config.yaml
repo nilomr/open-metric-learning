@@ -1,0 +1,36 @@
+accelerator: gpu
+devices: 1
+precision: 32
+dataframe_name: df.csv
+dataset_root: /data/zool-songbird/shil5293/projects/open-metric-learning/great-tit-train/datasets/GRETI
+bs_val: 256
+num_workers: 8
+transforms_val:
+  name: norm_resize_albu
+  args:
+    im_size: 224
+model:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: false
+    use_multi_scale: false
+    weights: vits16_cub
+metric_args:
+  metrics_to_exclude_from_visualization:
+  - cmc
+  cmc_top_k:
+  - 1
+  - 5
+  map_top_k:
+  - 5
+  fmr_vals:
+  - 0.01
+  precision_top_k:
+  - 5
+  pfc_variance:
+  - 0.5
+  - 0.9
+  - 0.99
+  return_only_main_category: false
+  visualize_only_main_category: true
