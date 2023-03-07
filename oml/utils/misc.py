@@ -55,7 +55,10 @@ def one_hot(i: int, dim: int) -> torch.Tensor:
 
 
 def flatten_dict(
-    d: Dict[str, Any], parent_key: str = "", sep: str = "/", ignored_keys: Iterable[str] = ()
+    d: Dict[str, Any],
+    parent_key: str = "",
+    sep: str = "/",
+    ignored_keys: Iterable[str] = (),
 ) -> Dict[str, Any]:
     items = []  # type: ignore
     for k, v in d.items():
@@ -63,7 +66,9 @@ def flatten_dict(
             continue
         new_key = str(parent_key) + sep + str(k) if parent_key else str(k)
         if isinstance(v, dict):
-            items.extend(flatten_dict(v, new_key, sep=sep, ignored_keys=ignored_keys).items())
+            items.extend(
+                flatten_dict(v, new_key, sep=sep, ignored_keys=ignored_keys).items()
+            )
         else:
             items.append((new_key, v))
     return dict(items)
@@ -80,7 +85,6 @@ def dictconfig_to_dict(cfg: TCfg) -> Dict[str, Any]:
     ret = dict()
 
     for k in cfg.keys():
-
         if isinstance(cfg[k], DictConfig) or isinstance(cfg[k], dict):
             ret[k] = dictconfig_to_dict(cfg[k])
         else:
@@ -116,10 +120,16 @@ def clip_max(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
 
 
 def remove_unused_kwargs(kwargs: Dict[str, Any], constructor: Any) -> Dict[str, Any]:
-    return {k: v for k, v in kwargs.items() if k in inspect.signature(constructor).parameters}
+    return {
+        k: v
+        for k, v in kwargs.items()
+        if k in inspect.signature(constructor).parameters
+    }
 
 
-def check_if_nonempty_positive_integers(var: Union[int, Sequence[int]], name: str) -> None:
+def check_if_nonempty_positive_integers(
+    var: Union[int, Sequence[int]], name: str
+) -> None:
     """
     Check whether ``var`` is a positive integer or a non-empty Iterable of positive integers.
 
@@ -130,12 +140,18 @@ def check_if_nonempty_positive_integers(var: Union[int, Sequence[int]], name: st
     """
     if isinstance(var, Sequence):
         if not len(var) > 0 or not all([isinstance(x, int) and (x > 0) for x in var]):
-            raise ValueError(f"{name} is expected to be non-empty and contain positive integers, but got {var}")
+            raise ValueError(
+                f"{name} is expected to be non-empty and contain positive integers, but got {var}"
+            )
     elif isinstance(var, int):
         if var <= 0:
-            raise ValueError(f"{name} is expected to be a positive integer, but got {var}")
+            raise ValueError(
+                f"{name} is expected to be a positive integer, but got {var}"
+            )
     else:
-        raise ValueError(f"Unsupported argument type. Expected int or Iterable[int], but got {type(var)}")
+        raise ValueError(
+            f"Unsupported argument type. Expected int or Iterable[int], but got {type(var)}"
+        )
 
 
 def compare_dicts_recursively(d1: Dict, d2: Dict) -> bool:  # type: ignore
@@ -153,7 +169,9 @@ def compare_dicts_recursively(d1: Dict, d2: Dict) -> bool:  # type: ignore
                 v, d2[k]
             ), f"The dictionaries differs at key {k}.\nDict_1 value: {v}\nDict_2 value: {d2[k]}"
         else:
-            assert d2[k] == v, f"Key name: {k}\nDict_1 value: {v}\nDict_2 value: {d2[k]}"
+            assert (
+                d2[k] == v
+            ), f"Key name: {k}\nDict_1 value: {v}\nDict_2 value: {d2[k]}"
     return True
 
 
@@ -175,6 +193,16 @@ def find_first_occurrences(x: List[Hashable]) -> List[int]:
     return first_ids
 
 
+def git_root():
+    import subprocess
+
+    return (
+        subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
+        .decode("utf-8")
+        .strip()
+    )
+
+
 __all__ = [
     "find_value_ids",
     "set_global_seed",
@@ -187,4 +215,5 @@ __all__ = [
     "check_if_nonempty_positive_integers",
     "compare_dicts_recursively",
     "find_first_occurrences",
+    "git_root",
 ]
