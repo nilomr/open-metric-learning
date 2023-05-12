@@ -30,7 +30,7 @@ sampler:
     n_instances: 4
 
 bs_val: 256
-max_epochs: 300 # was 1000
+max_epochs: 400 # was 1000
 valid_period: 5
 log_every_n_steps: 10
 

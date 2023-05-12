@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional, Union
 
+import cv2
 import numpy as np
 import torch
 from pytorch_grad_cam.utils.image import show_cam_on_image
@@ -9,16 +10,15 @@ from torch import nn
 from oml.const import MEAN, STD, STORAGE_CKPTS, TNormParam
 from oml.interfaces.models import IExtractor
 from oml.models.utils import remove_prefix_from_state_dict
-from oml.models.vit.hubconf import (  # type: ignore
+from oml.models.vit.hubconf import (
     dino_vitb8,
-    dino_vitb16,
+    dino_vitb16,  # type: ignore
     dino_vits8,
     dino_vits16,
 )
 from oml.transforms.images.albumentations.transforms import get_normalisation_albu
 from oml.utils.io import download_checkpoint_one_of
 from oml.utils.misc_torch import normalise
-import cv2
 
 _FB_URL = "https://dl.fbaipublicfiles.com"
 
@@ -179,8 +179,15 @@ class ViTExtractor(IExtractor):
         return vis_vit(vit=self, image=image)
 
 
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+
 def vis_vit(
-    vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD
+    vit: ViTExtractor,
+    image: np.ndarray,
+    mean: TNormParam = MEAN,
+    std: TNormParam = STD,
 ) -> np.ndarray:
     vit.eval()
 
@@ -200,27 +207,25 @@ def vis_vit(
         attentions = vit.model.get_last_selfattention(img_tensor)
 
     nh = attentions.shape[1]
-
     attentions = attentions[0, :, 0, 1:].reshape(nh, -1)
-
     attentions = attentions.reshape(nh, w_feat_map, h_feat_map)
+
     attentions = (
-        nn.functional.interpolate(
+        F.interpolate(
             attentions.unsqueeze(0),
             scale_factor=patch_size,
-            mode="nearest",
+            mode="bicubic",
         )[0]
+        .clamp(min=0, max=255)
         .cpu()
         .numpy()
     )
 
-    arr = sum(
-        attentions[i] * 1 / attentions.shape[0] for i in range(attentions.shape[0])
-    )
+    heatmap = np.mean(attentions, axis=0)
+    heatmap_norm = (heatmap - heatmap.min()) / (heatmap.max() - heatmap.min())
+    heatmap_viridis = plt.cm.viridis(heatmap_norm)[:, :, :3]  # Remove alpha channel
 
-    arr = show_cam_on_image(image / image.max(), 0.6 * arr / arr.max(), colormap=cv2.COLORMAP_MAGMA, image_weight=0.6)  # type: ignore
-
-    return arr
+    return heatmap_viridis
 
 
 __all__ = ["ViTExtractor", "vis_vit"]

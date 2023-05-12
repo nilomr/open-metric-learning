@@ -1,11 +1,9 @@
 from pathlib import Path
-from typing import Union
 
 import albumentations as albu
 import cv2
-import matplotlib
 import matplotlib.pyplot as plt
-import numpy as np
+from albumentations import ImageOnlyTransform
 from albumentations.pytorch import ToTensorV2
 
 from oml.const import MEAN, STD, TNormParam
@@ -51,6 +49,42 @@ def get_noises() -> TTransformsList:
     return noise_augs
 
 
+class NormalizeNoContrast(ImageOnlyTransform):
+    """Normalization that does not increase the contrast of the image.
+    Modifies Normalize from the albumentations library.
+
+    Args:
+        mean (float, list of float): mean values
+        std  (float, list of float): std values
+        max_pixel_value (float): maximum possible pixel value
+
+    Targets:
+        image
+
+    Image types:
+        uint8, float32
+    """
+
+    def __init__(
+        self,
+        mean=(0.485, 0.456, 0.406),
+        std=(0.229, 0.224, 0.225),
+        max_pixel_value=255.0,
+        always_apply=False,
+        p=1.0,
+    ):
+        super(NormalizeNoContrast, self).__init__(always_apply, p)
+        self.mean = mean
+        self.std = std
+        self.max_pixel_value = max_pixel_value
+
+    def apply(self, image, **params):
+        return (image / self.max_pixel_value - self.mean) / self.std
+
+    def get_transform_init_args_names(self):
+        return ("mean", "std", "max_pixel_value")
+
+
 def get_greti_augs_train(
     im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> albu.Compose:
@@ -84,7 +118,7 @@ def get_greti_augs_train(
 
 
 def get_greti_augs_val(
-    im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD
+    im_size: int, mean: TNormParam = (0, 0, 0), std: TNormParam = (1, 1, 1)
 ) -> albu.Compose:
     return albu.Compose(
         [
@@ -135,19 +169,21 @@ def plot_augmentation_grid(
         else:
             if i - 1 < n:
                 aug_image = augs(image=image)["image"]
-
                 ax.imshow(aug_image.permute(1, 2, 0).numpy())
                 ax.axis("off")
             else:
                 ax.axis("off")
+
+    print(aug_image)
+
     fig.tight_layout()
     return fig
 
 
-fig = plot_augmentation_grid(
-    train_images[0], n=40, n_cols=7, augs=get_greti_augs_train(224)
-)
-plt.show()
+# fig = plot_augmentation_grid(
+#     train_images[0], n=40, n_cols=7, augs=get_greti_augs_train(224)
+# )
+# plt.show()
 
 
 fig = plot_augmentation_grid(

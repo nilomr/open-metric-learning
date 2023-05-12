@@ -7,18 +7,41 @@ from sklearn.model_selection import train_test_split
 
 from oml.utils.misc import git_root
 
+
 # set root of GIT repository
+def git_root():
+    import subprocess
+
+    return (
+        subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
+        .decode("utf-8")
+        .strip()
+    )
+
+
 root = Path(git_root()) / "great-tit-train"
 dataset = "GRETI"
 seed = 42
 
 # set paths
 data_dir = root / "datasets" / dataset
-train_folder = data_dir / "train"
+train_folder = data_dir / "train"  # TODO: just export all images together
+test_folder = data_dir / "test"
 df_path = data_dir / "df.csv"
 
 # get all image paths and labels
-image_paths = list(train_folder.glob("*/*.jpg"))
+
+
+# TODO: just export all images together
+def sort_paths(paths):
+    """Sorts a list of pathlib.Path objects based on the name of the parent folder."""
+    parent_names = [path.parent.name for path in paths]
+    sorted_indices = sorted(range(len(parent_names)), key=lambda i: parent_names[i])
+    return [paths[i] for i in sorted_indices]
+
+
+image_paths = list(train_folder.glob("*/*.jpg"))  # + list(test_folder.glob("*/*.jpg"))
+# order_paths = sort_paths(image_paths)
 labels = [path.parent.name for path in image_paths]
 
 
@@ -37,7 +60,7 @@ df = (
 
 # split into train and validation set wihin each group:
 train, validate = train_test_split(
-    df, test_size=0.5, stratify=df["label"], random_state=seed
+    df, test_size=0.4, stratify=df["label"], random_state=seed
 )
 
 # concatenate train and validate, adding a column to indicate split:
@@ -61,6 +84,8 @@ if split_df.groupby(["label", "split"]).count().path.min() < 1:
 # conver the label column to int, saving a dictionary to map back:
 label_map = {label: i for i, label in enumerate(split_df.label.unique())}
 split_df.label = split_df.label.map(label_map)
+
+split_df.groupby(["label", "split"]).count()
 
 # save label map as json in data_dir:
 with open(data_dir / "label_map.json", "w") as f:
