@@ -139,6 +139,7 @@ def extractor_training_pipeline(cfg: TCfg) -> None:
         enable_progress_bar=True,
         enable_model_summary=True,
         callbacks=[metrics_clb, parse_ckpt_callback_from_config(cfg)],
+        log_every_n_steps=cfg["log_every_n_steps"],
         logger=logger,
         precision=cfg.get("precision", 32),
         **trainer_engine_params,

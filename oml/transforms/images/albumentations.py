@@ -149,23 +149,23 @@ def get_greti_augs_train(
         [
             albu.RandomCrop(im_size, im_size),
             albu.CoarseDropout(
-                max_holes=4, max_height=20, max_width=20, fill_value=PAD_COLOR, p=0.4
+                max_holes=5, max_height=30, max_width=30, fill_value=PAD_COLOR, p=0.4
             ),
-            albu.GaussNoise(p=0.7),
-            albu.ISONoise(p=0.7),
+            albu.GaussNoise(p=0.6),
             albu.MultiplicativeNoise(p=0.7),
             albu.CLAHE(p=0.2),
             albu.Sharpen(p=0.2),
             albu.Emboss(p=0.2),
-            albu.RandomBrightnessContrast(p=0.4),
+            albu.RandomBrightnessContrast((-0.05, 0.5), p=0.4),
+            albu.Blur(p=0.3),
             albu.ShiftScaleRotate(
-                shift_limit=0.05,
+                shift_limit=0.06,
                 scale_limit=0.05,
                 rotate_limit=2,
                 interpolation=cv2.INTER_LINEAR,
                 border_mode=cv2.BORDER_CONSTANT,
                 value=PAD_COLOR,
-                p=0.3,
+                p=0.4,
             ),
             albu.Normalize(mean=mean, std=std),
             ToTensorV2(),

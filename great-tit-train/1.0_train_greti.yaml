@@ -7,7 +7,7 @@ devices: 1
 
 dataframe_name: df.csv
 dataset_root: /data/zool-songbird/shil5293/projects/open-metric-learning/great-tit-train/datasets/GRETI
-logs_root: logs/GRETI
+logs_root: logs/GRETI/
 logs_folder: ${now:%Y-%m-%d_%H-%M-%S}_${postfix}
 
 num_workers: 20
@@ -32,7 +32,7 @@ sampler:
 bs_val: 256
 max_epochs: 400 # was 1000
 valid_period: 5
-log_every_n_steps: 10
+log_every_n_steps: 5
 
 metric_args:
   metrics_to_exclude_from_visualization: [cmc,]
@@ -47,10 +47,10 @@ log_images: True
 
 metric_for_checkpointing: OVERALL/cmc/1
 
-model:
+extractor:
   name: vit
   args:
-    normalise_features: True
+    normalise_features: False
     use_multi_scale: False
     weights: vits16_dino
     arch: vits16

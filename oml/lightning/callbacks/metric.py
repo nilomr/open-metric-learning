@@ -53,14 +53,23 @@ class MetricValCallback(Callback):
         self._ready_to_accumulate = False
 
     def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:
-        return self.samples_in_getitem * len(trainer.val_dataloaders[dataloader_idx].dataset)
+        return self.samples_in_getitem * len(
+            trainer.val_dataloaders[dataloader_idx].dataset
+        )
 
     def on_validation_batch_start(
-        self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int
+        self,
+        trainer: pl.Trainer,
+        pl_module: pl.LightningModule,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int,
     ) -> None:
         if dataloader_idx == self.loader_idx:
             if not self._ready_to_accumulate:
-                self._expected_samples = self._calc_expected_samples(trainer=trainer, dataloader_idx=dataloader_idx)
+                self._expected_samples = self._calc_expected_samples(
+                    trainer=trainer, dataloader_idx=dataloader_idx
+                )
                 self._collected_samples = 0
 
                 self.metric.setup(num_samples=self._expected_samples)
@@ -104,11 +113,17 @@ class MetricValCallback(Callback):
                 fig.canvas.draw()
                 data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
                 data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-                pl_module.logger.experiment.add_image(log_str, np.swapaxes(data, 0, 2), pl_module.current_epoch)
+                pl_module.logger.experiment.add_image(
+                    log_str, np.swapaxes(data, 0, 2), pl_module.current_epoch
+                )
             else:
-                raise ValueError(f"Logging with {type(pl_module.logger)} is not supported yet.")
+                raise ValueError(
+                    f"Logging with {type(pl_module.logger)} is not supported yet."
+                )
 
-    def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
+    def on_validation_epoch_end(
+        self, trainer: pl.Trainer, pl_module: pl.LightningModule
+    ) -> None:
         self._ready_to_accumulate = False
         if self._collected_samples != self._expected_samples:
             self._raise_computation_error()
@@ -181,10 +196,14 @@ class MetricValCallbackDDP(MetricValCallback):
             if not check_loaders_is_patched(trainer.val_dataloaders):
                 raise RuntimeError(err_message_loaders_is_not_patched)
 
-    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+    def on_train_start(
+        self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
+    ) -> None:
         self._check_loaders(trainer)
 
-    def on_validation_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+    def on_validation_start(
+        self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
+    ) -> None:
         self._check_loaders(trainer)
 
 

@@ -1,13 +1,13 @@
 import hydra
 from omegaconf import DictConfig
 
-from oml.lightning.entrypoints.train import pl_train
+from oml.lightning.pipelines.train import extractor_training_pipeline
 
 
 @hydra.main(config_path=".", config_name="1.0_train_greti.yaml")
 def main_hydra(cfg: DictConfig) -> None:
     print("Training model on great tit dataset")
-    pl_train(cfg)
+    extractor_training_pipeline(cfg)
 
 
 if __name__ == "__main__":
