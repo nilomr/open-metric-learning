@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 
 from oml.const import INDEX_KEY, INPUT_TENSORS_KEY
 from oml.exceptions import InvalidBBoxesException
-from oml.transforms.images.torchvision.transforms import get_normalisation_torch
+from oml.transforms.images.torchvision import get_normalisation_torch
 from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
 from oml.utils.images.images import TImReader
 
@@ -62,7 +62,7 @@ class ListDataset(Dataset):
     def validate_bboxes(bboxes: Optional[TBBoxes], files: Sequence[Path]) -> None:
         if bboxes is not None:
             if len(bboxes) != len(files):
-                raise InvalidBBoxesException(f"Number of boxes and files missmatch: {len(bboxes)=} != {len(files)}")
+                raise InvalidBBoxesException(f"Number of boxes and files missmatch: {len(bboxes)} != {len(files)}")
             for box, file_ in zip(bboxes, files):
                 if box is not None:
                     if len(box) != 4:

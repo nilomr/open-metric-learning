@@ -1,6 +1,6 @@
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
-from oml.transforms.images.albumentations.transforms import (
+from oml.transforms.images.albumentations import (
     get_augs_albu,
     get_greti_augs_train,
     get_greti_augs_val,
@@ -8,14 +8,15 @@ from oml.transforms.images.albumentations.transforms import (
     get_normalisation_resize_albu,
     get_normalisation_resize_albu_clip,
 )
-from oml.transforms.images.torchvision.transforms import (
+from oml.transforms.images.torchvision import (
     get_augs_hypvit,
     get_augs_torch,
     get_normalisation_resize_hypvit,
     get_normalisation_resize_torch,
     get_normalisation_torch,
 )
-from oml.transforms.images.utils import TTransforms
+from oml.transforms.images.utils import TTransforms, get_im_reader_for_transforms
+from oml.utils.images.images import TImReader
 from oml.utils.misc import TCfg, dictconfig_to_dict
 
 TRANSFORMS_ALBU = {
@@ -48,10 +49,43 @@ def get_transforms_by_cfg(cfg: TCfg) -> TTransforms:
     return get_transforms(name=cfg["name"], **cfg["args"])
 
 
+TRANSFORMS_FOR_PRETRAINED = {
+    "resnet50_moco_v2": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "resnet18_imagenet1k_v1": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "resnet34_imagenet1k_v1": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "resnet50_imagenet1k_v1": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "resnet101_imagenet1k_v1": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "resnet152_imagenet1k_v1": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+    "vitb8_dino": get_normalisation_resize_torch(im_size=224),
+    "vitb16_dino": get_normalisation_resize_torch(im_size=224),
+    "vits8_dino": get_normalisation_resize_torch(im_size=224),
+    "vits16_dino": get_normalisation_resize_torch(im_size=224),
+    "sber_vitb32_224": get_normalisation_resize_albu_clip(im_size=224),
+    "sber_vitb16_224": get_normalisation_resize_albu_clip(im_size=224),
+    "sber_vitl14_224": get_normalisation_resize_albu_clip(im_size=224),
+    "openai_vitb32_224": get_normalisation_resize_albu_clip(im_size=224),
+    "openai_vitb16_224": get_normalisation_resize_albu_clip(im_size=224),
+    "openai_vitl14_224": get_normalisation_resize_albu_clip(im_size=224),
+    "openai_vitl14_336": get_normalisation_resize_albu_clip(im_size=224),
+    "vits16_inshop": get_normalisation_resize_hypvit(im_size=224, crop_size=224),
+    "vits16_sop": get_normalisation_resize_hypvit(im_size=224, crop_size=224),
+    "vits16_cars": get_normalisation_resize_albu(im_size=224),
+    "vits16_cub": get_normalisation_resize_albu(im_size=224),
+    "vits16_224_mlp_384_inshop": get_normalisation_resize_hypvit(im_size=256, crop_size=224),
+}
+
+
+def get_transforms_for_pretrained(weights: str) -> Tuple[TTransforms, TImReader]:
+    transforms = TRANSFORMS_FOR_PRETRAINED[weights]
+    im_reader = get_im_reader_for_transforms(transforms)
+    return transforms, im_reader
+
+
 __all__ = [
     "TRANSFORMS_TORCH",
     "TRANSFORMS_ALBU",
     "TRANSFORMS_REGISTRY",
     "get_transforms",
     "get_transforms_by_cfg",
+    "get_transforms_for_pretrained",
 ]

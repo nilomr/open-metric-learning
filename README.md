@@ -16,7 +16,7 @@
 
 OML is a PyTorch-based framework to train and validate the models producing high-quality embeddings.
 
-## FAQ
+## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)
 
 <details>
 <summary>Why do I need OML?</summary>
@@ -58,7 +58,7 @@ and it includes a rich collection of losses, miners, distances, and reducers; th
 Initially, we tried to use PML, but in the end, we came up with our library, which is more pipeline / recipes oriented.
 That is how OML differs from PML:
 
-* OML has [Config API](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html)
+* OML has [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
   which allows training models by preparing a config and your data in the required format
   (it's like converting data into COCO format to train a detector from [mmdetection](https://github.com/open-mmlab/mmdetection)).
 
@@ -79,9 +79,9 @@ That is how OML differs from PML:
   and the
   [PMLs one](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DistributedTripletMarginLossMNIST.ipynb).
   By the way, PML also has [Trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/), but it's not
-  in the examples and custom `train` / `test` functions are used instead.
+  widely used in the examples and custom `train` / `test` functions are used instead.
 
-We believe that having Config API, laconic examples, and Zoo of pretrained models sets the entry threshold to a really low value.
+We believe that having Pipelines, laconic examples, and Zoo of pretrained models sets the entry threshold to a really low value.
 
 </p>
 </details>
@@ -163,28 +163,6 @@ Thus, utilising simple heuristics and avoiding heavy math we are able to perform
 </details>
 
 <details>
-<summary>How does OML work under the hood? </summary>
-<p>
-
-**Training part** implies using losses, well-established for metric learning, such as the angular losses
-(like *ArcFace*) or the combinations based losses (like *TripletLoss* or *ContrastiveLoss*).
-The latter benefits from effective mining schemas of triplets/pairs, so we pay great attention to it.
-Thus, during the training we:
-   1. Use `DataLoader` + `Sampler` to form batches (for example `BalanceSampler`)
-   2. [Only for losses based on combinations] Use `Miner` to form effective pairs or triplets, including those which utilize a memory bank.
-   3. Compute loss.
-
-**Validation part** consists of several steps:
-  1. Accumulating all of the embeddings (`EmbeddingMetrics`).
-  2. Calculating distances between them with respect to query/gallery split.
-  3. Applying some specific retrieval techniques like query reranking or score normalisation.
-  4. Calculating retrieval metrics like *CMC@k*, *Precision@k* or *MeanAveragePrecision@k*.
-
-</p>
-</details>
-
-
-<details>
 <summary>What about Self-Supervised Learning?</summary>
 <p>
 
@@ -210,7 +188,7 @@ No, you don't. OML is a framework-agnostic. Despite we use PyTorch Lightning as 
 runner for the experiments, we also keep the possibility to run everything on pure PyTorch.
 Thus, only the tiny part of OML is Lightning-specific and we keep this logic separately from
 other code (see `oml.lightning`). Even when you use Lightning, you don't need to know it, since
-we provide ready to use [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
+we provide ready to use [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/).
 
 The possibility of using pure PyTorch and modular structure of the code leaves a room for utilizing
 OML with your favourite framework after the implementation of the necessary wrappers.
@@ -223,7 +201,7 @@ OML with your favourite framework after the implementation of the necessary wrap
 <summary>Can I use OML without any knowledge in DataScience?</summary>
 <p>
 
-Yes. To run the experiment with [Config API](https://github.com/OML-Team/open-metric-learning/blob/main/examples/)
+Yes. To run the experiment with [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/)
 you only need to write a converter
 to our format (it means preparing the
 `.csv` table with 5 predefined columns).
@@ -234,11 +212,26 @@ in our *Models Zoo*. In this case, you don't even need to train it.
 </p>
 </details>
 
-## Documentation
+## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)
 
 Documentation is available via the [link](https://open-metric-learning.readthedocs.io/en/latest/index.html).
 
-## Installation
+You can also read some extra materials related to OML:
+
+* Theory and practice of metric learning with the usage of OML.
+[Post in English on Medium](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
+[Post in Russian on Habr](https://habr.com/ru/company/ods/blog/695380/) |
+[Post in Chinese on CSDN](https://blog.csdn.net/fermion0217/article/details/127932087), translated by Chia-Chen Chang.
+
+* The
+[DEMO](https://dapladoc-oml-postprocessing-demo-srcappmain-pfh2g0.streamlit.app/)
+for our paper
+[STIR: Siamese Transformers for Image Retrieval Postprocessing](https://arxiv.org/abs/2304.13393)
+
+* The report for Berlin-based meetup: "Computer Vision in production". November, 2022.
+[Link](https://drive.google.com/drive/folders/1uHmLU8vMrMVMFodt36u0uXAgYjG_3D30?usp=share_link)
+
+## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)
 
 OML is available in PyPI:
 
@@ -260,22 +253,7 @@ make docker_build RUNTIME=cpu
 make docker_build RUNTIME=gpu
 ```
 
-## Get started using Config API
-
-Using configs is the best option if your dataset and pipeline are standard enough or if you are not
-experienced in Machine Learning or Python. You can find more details in the
-[examples](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
-
-## Get started using Python
-
-The most flexible, but knowledge-requiring approach.
-You are not limited by our project structure and you can use only that part of the functionality which you need.
-You can start with fully working code snippets below that train and validate the model
-on a tiny dataset of
-[figures](https://drive.google.com/drive/folders/1plPnwyIkzg51-mLUXWTjREHgc1kgGrF4?usp=sharing).
-ㅤ
-
-**Feature extractor**
+## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)
 
 <details>
 <summary>Training</summary>
@@ -296,8 +274,8 @@ from oml.utils.download_mock_dataset import download_mock_dataset
 dataset_root = "mock_dataset/"
 df_train, _ = download_mock_dataset(dataset_root)
 
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
+extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
+optimizer = torch.optim.SGD(extractor.parameters(), lr=1e-6)
 
 train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
 criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
@@ -305,7 +283,7 @@ sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
 
 for batch in tqdm(train_loader):
-    embeddings = model(batch["input_tensors"])
+    embeddings = extractor(batch["input_tensors"])
     loss = criterion(embeddings, batch["labels"])
     loss.backward()
     optimizer.step()
@@ -316,398 +294,132 @@ for batch in tqdm(train_loader):
 </details>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kntDAIdIZ9L40jcndguLAb-XqmCFOgS5?usp=sharing)
-
 <details>
-<summary>Validation</summary>
+<summary>Using a trained model for retrieval</summary>
 <p>
 
-[comment]:vanilla-validation-start
+[comment]:usage-retrieval-start
 ```python
 import torch
-from tqdm import tqdm
 
-from oml.datasets.base import DatasetQueryGallery
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.models.vit.vit import ViTExtractor
+from oml.const import MOCK_DATASET_PATH
+from oml.inference.flat import inference_on_images
+from oml.models import ViTExtractor
+from oml.registry.transforms import get_transforms_for_pretrained
 from oml.utils.download_mock_dataset import download_mock_dataset
+from oml.utils.misc_torch import pairwise_dist
 
-dataset_root =  "mock_dataset/"
-_, df_val = download_mock_dataset(dataset_root)
+_, df_val = download_mock_dataset(MOCK_DATASET_PATH)
+df_val["path"] = df_val["path"].apply(lambda x: MOCK_DATASET_PATH / x)
+queries = df_val[df_val["is_query"]]["path"].tolist()
+galleries = df_val[df_val["is_gallery"]]["path"].tolist()
 
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).eval()
+extractor = ViTExtractor.from_pretrained("vits16_dino")
+transform, _ = get_transforms_for_pretrained("vits16_dino")
 
-val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
+args = {"num_workers": 0, "batch_size": 8}
+features_queries = inference_on_images(extractor, paths=queries, transform=transform, **args)
+features_galleries = inference_on_images(extractor, paths=galleries, transform=transform, **args)
 
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-calculator = EmbeddingMetrics()
-calculator.setup(num_samples=len(val_dataset))
+# Now we can explicitly build pairwise matrix of distances or save you RAM via using kNN
+use_knn = True
+top_k = 3
 
-with torch.no_grad():
-    for batch in tqdm(val_loader):
-        batch["embeddings"] = model(batch["input_tensors"])
-        calculator.update_data(batch)
+if use_knn:
+    from sklearn.neighbors import NearestNeighbors
+    knn = NearestNeighbors(algorithm="auto", p=2)
+    knn.fit(features_galleries)
+    dists, ii_closest = knn.kneighbors(features_queries, n_neighbors=top_k, return_distance=True)
 
-metrics = calculator.compute_metrics()
+else:
+    dist_mat = pairwise_dist(x1=features_queries, x2=features_galleries)
+    dists, ii_closest = torch.topk(dist_mat, dim=1, k=top_k, largest=False)
+
+print(f"Top {top_k} items closest to queries are:\n {ii_closest}")
 ```
-[comment]:vanilla-validation-end
+[comment]:usage-retrieval-end
 </p>
 </details>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1O2o3k8I8jN5hRin3dKnAS3WsgG04tmIT?usp=sharing)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1S2nK6KaReDm-RjjdojdId6CakhhSyvfA?usp=share_link)
 
-<details>
-<summary>Training + Validation [Lightning]</summary>
-<p>
+[**Schemas, explanations and tips**](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
 
-[comment]:lightning-start
-```python
-import pytorch_lightning as pl
-import torch
+See [extra code snippets](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html), including:
+* Training + Validation with Lightning
+* Training + Validation with Lightning in DDP mode
+* Training with losses from PML
+* Training with losses from PML advanced (passing distance, reducer, miner)
 
-from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning.modules.retrieval import RetrievalModule
-from oml.lightning.callbacks.metric import MetricValCallback
-from oml.losses.triplet import TripletLossWithMiner
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
+## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)
 
-dataset_root =  "mock_dataset/"
-df_train, df_val = download_mock_dataset(dataset_root)
+Pipelines provide a way to run metric learning experiments via changing only the config file.
+All you need is to prepare your dataset in a required format.
 
-# model
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
+See [Pipelines](https://github.com/OML-Team/open-metric-learning/blob/main/pipelines/) folder for more details:
+* Feature extractor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction)
+* Retrieval postprocessor [pipeline](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/postprocessing) (re-ranking)
 
-# train
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
-train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
-criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sampler)
-
-# val
-val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallback(metric=EmbeddingMetrics())
-
-# run
-pl_model = RetrievalModule(model, criterion, optimizer)
-trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0)
-trainer.fit(pl_model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-```
-[comment]:lightning-end
-</p>
-</details>
-ㅤ
-
-<details>
-<summary>Training + Validation [Lightning Distributed]</summary>
-<p>
-
-[comment]:lightning-ddp-start
-```python
-import pytorch_lightning as pl
-import torch
-
-from oml.datasets.base import DatasetQueryGallery, DatasetWithLabels
-from oml.lightning.modules.retrieval import RetrievalModuleDDP
-from oml.lightning.callbacks.metric import MetricValCallbackDDP
-from oml.losses.triplet import TripletLossWithMiner
-from oml.metrics.embeddings import EmbeddingMetricsDDP
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
-
-dataset_root = "mock_dataset/"
-df_train, df_val = download_mock_dataset(dataset_root)
-
-# model
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
-
-# train
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
-train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
-criterion = TripletLossWithMiner(margin=0.1, miner=AllTripletsMiner())
-batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=3)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=batch_sampler)
-
-# val
-val_dataset = DatasetQueryGallery(df_val, dataset_root=dataset_root)
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=4)
-metric_callback = MetricValCallbackDDP(metric=EmbeddingMetricsDDP())  # DDP specific
-
-# run
-pl_model = RetrievalModuleDDP(model=model, criterion=criterion, optimizer=optimizer,
-                              loaders_train=train_loader, loaders_val=val_loader  # DDP specific
-                              )
-
-ddp_args = {"accelerator": "auto", "devices": 2, "strategy": pl.plugins.DDPPlugin(), "replace_sampler_ddp": False} # DDP specific
-trainer = pl.Trainer(max_epochs=1, callbacks=[metric_callback], num_sanity_val_steps=0, **ddp_args)
-trainer.fit(pl_model)  # we don't pass loaders to .fit() in DDP
-```
-[comment]:lightning-ddp-end
-</p>
-</details>
-ㅤ
-
-**Postprocessing**
-
-You can also boost retrieval accuracy of your features extractor by adding a postprocessor (we recommend
-to check the examples above first).
-In the example below we train a siamese model to re-rank top retrieval outputs of the original model
-by performing inference on pairs ``(query, output_i)`` where ``i=1..top_n``.
-
-For the Config-API analogue of the pipeline below, please, check the
-[config](https://github.com/OML-Team/open-metric-learning/blob/main/examples/sop/configs_experimental/train_postprocessor_sop.yaml).
-The documentation for related classes is available via the [link](https://open-metric-learning.readthedocs.io/en/latest/contents/postprocessing.html).
-*Note, this functionality is new and a work still in progress.*
-
-<details>
-<summary>Postprocessor: Training + Validation</summary>
-<p>
-
-[comment]:postprocessor-start
-```python
-from pprint import pprint
-
-import torch
-from torch.nn import BCEWithLogitsLoss
-from torch.utils.data import DataLoader
-
-from oml.datasets.base import DatasetWithLabels, DatasetQueryGallery
-from oml.inference.flat import inference_on_dataframe
-from oml.metrics.embeddings import EmbeddingMetrics
-from oml.miners.pairs import PairsMiner
-from oml.models.siamese import ConcatSiamese
-from oml.models.vit.vit import ViTExtractor
-from oml.retrieval.postprocessors.pairwise import PairwiseImagesPostprocessor
-from oml.samplers.balance import BalanceSampler
-from oml.transforms.images.torchvision.transforms import get_normalisation_resize_torch
-from oml.utils.download_mock_dataset import download_mock_dataset
-
-# Let's start with saving embeddings of a pretrained extractor for which we want to build a postprocessor
-dataset_root = "mock_dataset/"
-download_mock_dataset(dataset_root)
-
-extractor = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False)
-transform = get_normalisation_resize_torch(im_size=64)
-
-embeddings_train, embeddings_val, df_train, df_val = \
-    inference_on_dataframe(dataset_root, "df.csv", extractor=extractor, transforms_extraction=transform)
-
-# We are building Siamese model on top of existing weights and train it to recognize positive/negative pairs
-siamese = ConcatSiamese(extractor=extractor, mlp_hidden_dims=[100])
-optimizer = torch.optim.SGD(siamese.parameters(), lr=1e-6)
-miner = PairsMiner(hard_mining=True)
-criterion = BCEWithLogitsLoss()
-
-train_dataset = DatasetWithLabels(df=df_train, transform=transform, extra_data={"embeddings": embeddings_train})
-batch_sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
-train_loader = DataLoader(train_dataset, batch_sampler=batch_sampler)
-
-for batch in train_loader:
-    # We sample pairs on which the original model struggled most
-    ids1, ids2, is_negative_pair = miner.sample(features=batch["embeddings"], labels=batch["labels"])
-    probs = siamese(x1=batch["input_tensors"][ids1], x2=batch["input_tensors"][ids2])
-    loss = criterion(probs, is_negative_pair.float())
-
-    loss.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-
-# Siamese re-ranks top-n retrieval outputs of the original model performing inference on pairs (query, output_i)
-val_dataset = DatasetQueryGallery(df=df_val, extra_data={"embeddings": embeddings_val}, transform=transform)
-valid_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
-
-postprocessor = PairwiseImagesPostprocessor(top_n=3, pairwise_model=siamese, transforms=transform)
-calculator = EmbeddingMetrics(postprocessor=postprocessor)
-calculator.setup(num_samples=len(val_dataset))
-
-for batch in valid_loader:
-    calculator.update_data(data_dict=batch)
-
-pprint(calculator.compute_metrics())  # Pairwise inference happens here
-```
-[comment]:postprocessor-end
-</p>
-</details>
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1LBmusxwo8dPqWznmK627GNMzeDVdjMwv?usp=sharing)
-
-## Usage with PyTorch Metric Learning
-
-You can easily access a lot of content from [PyTorch Metric Learning](https://github.com/KevinMusgrave/pytorch-metric-learning)
-with our library. You can see that the examples below are different from the basic ones only in a few lines of code:
-
-<details>
-<summary>Training with loss from PML</summary>
-<p>
-
-```python
-import torch
-from tqdm import tqdm
-
-from oml.datasets.base import DatasetWithLabels
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
-
-from pytorch_metric_learning import losses, distances, reducers, miners
-
-dataset_root = "mock_dataset/"
-df_train, _ = download_mock_dataset(dataset_root)
-
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
-
-train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
-
-# PML specific
-# criterion = losses.TripletMarginLoss(margin=0.2, triplets_per_anchor="all")
-criterion = losses.ArcFaceLoss(num_classes=df_train["label"].nunique(), embedding_size=model.feat_dim)  # for classification-like losses
-
-sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
-
-for batch in tqdm(train_loader):
-    embeddings = model(batch["input_tensors"])
-    loss = criterion(embeddings, batch["labels"])
-    loss.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-```
-
-</p>
-</details>
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1m66v1qhCyAUciEcXsJlIJtjF6nz6ZLI7?usp=sharing)
-
-<details>
-<summary>Training with distance, reducer, miner and loss from PML</summary>
-<p>
-
-```python
-import torch
-from tqdm import tqdm
-
-from oml.datasets.base import DatasetWithLabels
-from oml.losses.triplet import TripletLossWithMiner
-from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.models.vit.vit import ViTExtractor
-from oml.samplers.balance import BalanceSampler
-from oml.utils.download_mock_dataset import download_mock_dataset
-
-from pytorch_metric_learning import losses, distances, reducers, miners
-
-dataset_root = "mock_dataset/"
-df_train, _ = download_mock_dataset(dataset_root)
-
-model = ViTExtractor("vits16_dino", arch="vits16", normalise_features=False).train()
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-6)
-
-train_dataset = DatasetWithLabels(df_train, dataset_root=dataset_root)
-
-# PML specific
-distance = distances.LpDistance(p=2)
-reducer = reducers.ThresholdReducer(low=0)
-criterion = losses.TripletMarginLoss()
-miner = miners.TripletMarginMiner(margin=0.2, distance=distance, type_of_triplets="all")
-
-sampler = BalanceSampler(train_dataset.get_labels(), n_labels=2, n_instances=2)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=sampler)
-
-for batch in tqdm(train_loader):
-    embeddings = model(batch["input_tensors"])
-    loss = criterion(embeddings, batch["labels"], miner(embeddings, batch["labels"]))  # PML specific
-    loss.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-```
-
-</p>
-</details>
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MbVmSnQvO16eVgAqy1kcOd1XysgaYVBo?usp=sharing)
-
-Note, during the validation process OpenMetricLearning computes *L2* distances. Thus, when choosing a distance from PML,
-we recommend you to pick `distances.LpDistance(p=2)`.
-
-To use content from PyTorch Metric Learning with our Config API just follow the standard
-[tutorial](https://open-metric-learning.readthedocs.io/en/latest/examples/config.html#how-to-use-my-own-implementation-of-loss-model-augmentations-etc)
-of adding custom loss.
-
-## Zoo
+## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/postprocessing/zoo.html)
 
 Below are the models trained with OML on 4 public datasets.
-For more details about the training process and configs, please, visit *examples* submodule and it's
-[Readme](https://github.com/OML-Team/open-metric-learning/blob/main/examples/).
 All metrics below were obtained on the images with the sizes of **224 x 224**:
 
-|                            model                            | cmc1  |         dataset          |                                              weights                                              |                                           configs                                            |                                                                           transforms                                                                           |
-|:-----------------------------------------------------------:|:-----:|:------------------------:|:-------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| `ViTExtractor(weights="vits16_inshop", arch="vits16", ...)` | 0.921 |    DeepFashion Inshop    |    [link](https://drive.google.com/file/d/1niX-TC8cj6j369t7iU2baHQSVN3MVJbW/view?usp=sharing)     | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/inshop/configs)   |   [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/torchvision/transforms.py#L32)   |
-|  `ViTExtractor(weights="vits16_sop", arch="vits16", ...)`   | 0.866 | Stanford Online Products |   [link](https://drive.google.com/file/d/1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A/view?usp=sharing)      | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/sop/configs)      |   [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/torchvision/transforms.py#L32)   |
-|  `ViTExtractor(weights="vits16_cars", arch="vits16", ...)`  | 0.907 |         CARS 196         |   [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing)    | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cars/configs)     | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L128) |
-|  `ViTExtractor(weights="vits16_cub", arch="vits16", ...)`   | 0.837 |       CUB 200 2011       |   [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing)    | [link](https://github.com/OML-Team/open-metric-learning/tree/main/examples/cub/configs)      | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L128) |
+|                      model                      | cmc1  |         dataset          |                                              weights                                              |                                                    experiment                                                     |
+|:-----------------------------------------------:|:-----:|:------------------------:|:-------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------:|
+| `ViTExtractor.from_pretrained("vits16_inshop")` | 0.921 |    DeepFashion Inshop    |    [link](https://drive.google.com/file/d/1niX-TC8cj6j369t7iU2baHQSVN3MVJbW/view?usp=sharing)     | [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction/extractor_inshop) |
+|  `ViTExtractor.from_pretrained("vits16_sop")`   | 0.866 | Stanford Online Products |   [link](https://drive.google.com/file/d/1zuGRHvF2KHd59aw7i7367OH_tQNOGz7A/view?usp=sharing)      |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction/extractor_sop)   |
+| `ViTExtractor.from_pretrained("vits16_cars")`   | 0.907 |         CARS 196         |   [link](https://drive.google.com/drive/folders/17a4_fg94dox2sfkXmw-KCtiLBlx-ut-1?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction/extractor_cars)  |
+|  `ViTExtractor.from_pretrained("vits16_cub")`   | 0.837 |       CUB 200 2011       |   [link](https://drive.google.com/drive/folders/1TPCN-eZFLqoq4JBgnIfliJoEK48x9ozb?usp=sharing)    |  [link](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines/features_extraction/extractor_cub)   |
 
 We also provide an integration with the models pretrained by other researchers.
 All metrics below were obtained on the images with the sizes of **224 x 224**:
 
-|                        model                              |   Stanford Online Products |   DeepFashion InShop |   CUB 200 2011 |   CARS 196 |                                                                           transforms                                                                           |
-|:---------------------------------------------------------:|:--------------------------:|:--------------------:|:--------------:|:----------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| `ViTCLIPExtractor("sber_vitb32_224", "vitb32_224")`       |                      0.547 |                0.514 |          0.448 |      0.618 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L139) |
-| `ViTCLIPExtractor("sber_vitb16_224", "vitb16_224")`       |                      0.565 |                0.565 |          0.524 |      0.648 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L139) |
-| `ViTCLIPExtractor("sber_vitl14_224", "vitl14_224")`       |                      0.512 |                0.555 |          0.606 |      0.707 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L139) |
-| `ViTCLIPExtractor("openai_vitb32_224", "vitb32_224")`     |                      0.612 |                0.491 |          0.560 |      0.693 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L139) |
-| `ViTCLIPExtractor("openai_vitb16_224", "vitb16_224")`     |                      0.648 |                0.606 |          0.665 |      0.767 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L139) |
-| `ViTCLIPExtractor("openai_vitl14_224", "vitl14_224")`     |                      0.670 |                0.675 |          0.745 |      0.844 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L139) |
-| `ViTExtractor("vits16_dino", "vits16")`                   |                      0.629 |                0.456 |          0.693 |      0.313 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L128) |
-| `ViTExtractor("vits8_dino", "vits8")`                     |                      0.637 |                0.478 |          0.703 |      0.344 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L128) |
-| `ViTExtractor("vitb16_dino", "vitb16")`                   |                      0.636 |                0.464 |          0.626 |      0.340 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L128) |
-| `ViTExtractor("vitb8_dino", "vitb8")`                     |                      0.673 |                0.548 |          0.546 |      0.342 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L128) |
-| `ResnetExtractor("resnet50_moco_v2", "resnet50")`         |                      0.491 |                0.310 |          0.244 |      0.155 | [link](https://github.com/OML-Team/open-metric-learning/blob/5105622fa11d8109e4d33657628ed8479edbef99/oml/transforms/images/albumentations/transforms.py#L128) |
+|                            model                            | Stanford Online Products | DeepFashion InShop | CUB 200 2011 | CARS 196 |
+|:-----------------------------------------------------------:|:------------------------:|:------------------:|:------------:|:--------:|
+|    `ViTCLIPExtractor.from_pretrained("sber_vitb32_224")`    |          0.547           |       0.514        |    0.448     |  0.618   |
+|    `ViTCLIPExtractor.from_pretrained("sber_vitb16_224")`    |          0.565           |       0.565        |    0.524     |  0.648   |
+|    `ViTCLIPExtractor.from_pretrained("sber_vitl14_224")`    |          0.512           |       0.555        |    0.606     |  0.707   |
+|   `ViTCLIPExtractor.from_pretrained("openai_vitb32_224")`   |          0.612           |       0.491        |    0.560     |  0.693   |
+|   `ViTCLIPExtractor.from_pretrained("openai_vitb16_224")`   |          0.648           |       0.606        |    0.665     |  0.767   |
+|   `ViTCLIPExtractor.from_pretrained("openai_vitl14_224")`   |          0.670           |       0.675        |    0.745     |  0.844   |
+|        `ViTExtractor.from_pretrained("vits16_dino")`        |          0.648           |       0.509        |    0.627     |  0.265   |
+|        `ViTExtractor.from_pretrained("vits8_dino")`         |          0.651           |       0.524        |    0.661     |  0.315   |
+|        `ViTExtractor.from_pretrained("vitb16_dino")`        |          0.658           |       0.514        |    0.541     |  0.288   |
+|        `ViTExtractor.from_pretrained("vitb8_dino")`         |          0.689           |       0.599        |    0.506     |  0.313   |
+|    `ResnetExtractor.from_pretrained("resnet50_moco_v2")`    |          0.493           |       0.267        |    0.264     |  0.149   |
+| `ResnetExtractor.from_pretrained("resnet50_imagenet1k_v1")` |          0.515           |       0.284        |    0.455     |  0.247   |
 
+### How to use models from Zoo?
 
-You can specify the desired weights and architecture to automatically download pretrained checkpoint (by the analogue with torchvision.models):
-
-[comment]:checkpoint-start
+[comment]:zoo-start
 ```python
-import oml
-from oml.models.vit.vit import ViTExtractor
+from oml.const import CKPT_SAVE_ROOT as CKPT_DIR, MOCK_DATASET_PATH as DATA_DIR
+from oml.models import ViTExtractor
+from oml.registry.transforms import get_transforms_for_pretrained
 
-# We are downloading vits16 pretrained on CARS dataset:
-model = ViTExtractor(weights="vits16_cars", arch="vits16", normalise_features=False)
+model = ViTExtractor.from_pretrained("vits16_dino")
+transforms, im_reader = get_transforms_for_pretrained("vits16_dino")
 
-# You can also check other available pretrained models:
+img = im_reader(DATA_DIR / "images" / "circle_1.jpg")  # put path to your image here
+img_tensor = transforms(img)
+# img_tensor = transforms(image=img)["image"]  # for transforms from Albumentations
+
+features = model(img_tensor.unsqueeze(0))
+
+# Check other available models:
 print(list(ViTExtractor.pretrained_models.keys()))
 
-# To load checkpoint saved on a disk:
-model_from_disk = ViTExtractor(weights=oml.const.CKPT_SAVE_ROOT / "vits16_cars.ckpt", arch="vits16", normalise_features=False)
+# Load checkpoint saved on a disk:
+model_ = ViTExtractor(weights=CKPT_DIR / "vits16_dino.ckpt", arch="vits16", normalise_features=False)
 ```
-[comment]:checkpoint-end
+[comment]:zoo-end
 
-## Contributing guide
+## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)
 
 We welcome new contributors! Please, see our:
 * [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/from_readme/contributing.html)
 * [Kanban board](https://github.com/OML-Team/open-metric-learning/projects/1)
-
-## Extra materials
-
-You can also read some extra materials related to OML:
-
-* Theory and practice of metric learning with the usage of OML.
-[Post in English on Medium](https://medium.com/@AlekseiShabanov/practical-metric-learning-b0410cda2201) |
-[Post in Russian on Habr](https://habr.com/ru/company/ods/blog/695380/) |
-[Post in Chinese on CSDN](https://blog.csdn.net/fermion0217/article/details/127932087), translated by Chia-Chen Chang.
-
-* The report for Berlin-based meetup: "Computer Vision in production". November, 2022.
-[Link](https://drive.google.com/drive/folders/1uHmLU8vMrMVMFodt36u0uXAgYjG_3D30?usp=share_link)
 
 ## Acknowledgments
 

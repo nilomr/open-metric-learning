@@ -1,0 +1,84 @@
+postfix: "deepfashion"
+
+seed: 42
+precision: 32
+accelerator: cpu
+devices: 1
+
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df_with_bboxes.csv
+logs_root: logs
+
+num_workers: 0
+cache_size: 100
+
+transforms_train:
+  name: custom_augmentations
+  args:
+    im_size: 32
+
+transforms_val:
+  name: norm_resize_torch
+  args:
+    im_size: 48
+
+criterion:
+  name: triplet_with_miner
+  args:
+    margin: null
+    reduction: mean
+    need_logs: True
+    miner:
+      name: triplets_with_memory
+      args:
+        bank_size_in_batches: 2
+        tri_expand_k: 3
+
+defaults:
+  - optimizer: adam
+  - sampler: balance
+
+extractor:
+  name: resnet
+  args:
+    arch: resnet50_projector
+    gem_p: 7.0
+    remove_fc: True
+    normalise_features: False
+    weights: resnet50_moco_v2
+
+scheduling:
+  scheduler_interval: epoch
+  scheduler_frequency: 1
+  monitor_metric: triplet_loss_epoch
+  scheduler:
+    name: reduce_on_plateau
+    args:
+      mode: min
+      factor: 0.75
+      patience: 1
+
+bs_val: 2
+
+metric_args:
+  cmc_top_k: [1, 5]
+  return_only_main_category: True
+  visualize_only_main_category: True
+
+log_images: False
+
+metric_for_checkpointing: OVERALL/cmc/5
+
+max_epochs: 2
+valid_period: 2
+
+neptune_project: null
+
+tags:
+  - mock
+
+hydra:
+  run:
+    dir: ${logs_root}
+  searchpath:
+   - pkg://oml.configs

@@ -24,7 +24,11 @@ from oml.registry.optimizers import (
 from oml.registry.postprocessors import POSTPROCESSORS_REGISTRY, get_postprocessor
 from oml.registry.samplers import SAMPLERS_REGISTRY, get_sampler
 from oml.registry.schedulers import SCHEDULERS_REGISTRY, get_scheduler
-from oml.registry.transforms import TRANSFORMS_REGISTRY, get_transforms
+from oml.registry.transforms import (
+    TRANSFORMS_REGISTRY,
+    get_transforms,
+    get_transforms_for_pretrained,
+)
 from oml.utils.misc import dictconfig_to_dict
 
 
@@ -43,7 +47,7 @@ def get_opt() -> Optimizer:
 @pytest.mark.parametrize(
     "folder_name,registry,factory_fun,runtime_args",
     [
-        ("model", EXTRACTORS_REGISTRY, get_extractor, None),
+        ("extractor", EXTRACTORS_REGISTRY, get_extractor, None),
         ("criterion", LOSSES_REGISTRY, get_criterion, None),
         ("miner", MINERS_REGISTRY, get_miner, None),
         ("optimizer", OPTIMIZERS_REGISTRY, get_optimizer, {"params": get_params()}),
@@ -86,3 +90,11 @@ def test_model_raises(extractor_cfg: TCfg, kwargs: Dict[str, Any], raises: bool,
             raise_if_needed(extractor_cfg=extractor_cfg, kwargs=kwargs, model_name=model_name)
     else:
         raise_if_needed(extractor_cfg=extractor_cfg, kwargs=kwargs, model_name=model_name)
+
+
+def test_pretrained_extractors_have_transforms() -> None:
+    for cls in EXTRACTORS_REGISTRY.values():
+        for pretrained_weights in cls.pretrained_models:
+            _ = get_transforms_for_pretrained(pretrained_weights)
+
+    assert True

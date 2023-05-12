@@ -1,7 +1,7 @@
 ## Before you start
 * Read our [FAQ](https://github.com/OML-Team/open-metric-learning#faq).
 * Check out [python examples](https://github.com/OML-Team/open-metric-learning#get-started-using-python)
-  and [config examples](https://github.com/OML-Team/open-metric-learning/tree/main/examples).
+  and [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines).
 
 ## Choosing a task
 * Check out our [Kanban board](https://github.com/OML-Team/open-metric-learning/projects/1).
@@ -15,7 +15,7 @@
 * Clone it locally.
 * Create a branch with a name that speaks for itself.
 * Set up the environment. You can install the library in dev mode via `pip install -e .`
-  or [build / pull docker image](https://github.com/OML-Team/open-metric-learning#installation).
+  or build / pull [docker image](https://github.com/OML-Team/open-metric-learning#installation).
 * Implement the discussed functionality, **docstrings**, and **tests** for it.
 * Run tests locally via `make run_tests` or `make docker_tests` (preferable option).
 * Push the code to your forked repository.

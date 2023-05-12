@@ -14,25 +14,34 @@ OML_VERSION=$(shell cat oml/__init__.py | sed 's,.*__version__ = "\(.*\)".*,\1,'
 build_readme:
 	rm -f ${README_FILE}
 	touch ${README_FILE}
+	# Header
 	cat docs/readme/header.md >> ${README_FILE}
-	echo "\n## FAQ\n" >> ${README_FILE}
+	# FAQ
+	echo "\n## [FAQ](https://open-metric-learning.readthedocs.io/en/latest/oml/faq.html)\n" >> ${README_FILE}
 	cat docs/readme/faq.md >> ${README_FILE}
-	echo "\n## Documentation\n" >> ${README_FILE}
+	# Documentation
+	echo "\n## [Documentation](https://open-metric-learning.readthedocs.io/en/latest/index.html)\n" >> ${README_FILE}
 	cat docs/readme/documentation.md >> ${README_FILE}
-	echo "\n## Installation\n" >> ${README_FILE}
+	# Installation
+	echo "\n## [Installation](https://open-metric-learning.readthedocs.io/en/latest/oml/installation.html)\n" >> ${README_FILE}
 	cat docs/readme/installation.md >> ${README_FILE}
-	echo "\n## Get started using Config API\n" >> ${README_FILE}
-	cat docs/readme/get_started_config.md >> ${README_FILE}
-	echo "\n## Get started using Python\n" >> ${README_FILE}
-	cat docs/readme/python_examples.md >> ${README_FILE}
-	echo "\n## Usage with PyTorch Metric Learning\n" >> ${README_FILE}
-	cat docs/readme/usage_with_pml.md >> ${README_FILE}
-	echo "\n## Zoo\n" >>${README_FILE}
+	# Python examples
+	echo "\n## [Examples](https://open-metric-learning.readthedocs.io/en/latest/feature_extraction/python_examples.html#)\n" >> ${README_FILE}
+	cat docs/readme/examples_source/extractor/train.md >> ${README_FILE}
+	cat docs/readme/examples_source/extractor/retrieval_usage.md >> ${README_FILE}
+	cat docs/readme/examples.md >> ${README_FILE}
+	# Pipelines
+	echo "\n## [Pipelines](https://github.com/OML-Team/open-metric-learning/tree/main/pipelines)\n" >> ${README_FILE}
+	cat docs/readme/pipelines.md >> ${README_FILE}
+	# Zoo
+	echo "\n## [Zoo](https://open-metric-learning.readthedocs.io/en/latest/postprocessing/zoo.html)\n" >>${README_FILE}
 	cat docs/readme/zoo.md >> ${README_FILE}
-	echo "\n## Contributing guide\n" >> ${README_FILE}
+	echo "\n### How to use models from Zoo?\n" >> ${README_FILE}
+	cat docs/readme/examples_source/zoo/models_usage.md >> ${README_FILE}
+	# Contributing
+	echo "\n## [Contributing guide](https://open-metric-learning.readthedocs.io/en/latest/oml/contributing.html)\n" >> ${README_FILE}
 	cat docs/readme/contributing.md >> ${README_FILE}
-	echo "\n## Extra materials\n" >> ${README_FILE}
-	cat docs/readme/extra_materials.md >> ${README_FILE}
+	# Acknowledgments
 	echo "\n## Acknowledgments\n" >> ${README_FILE}
 	cat docs/readme/acknowledgments.md >> ${README_FILE}
 
@@ -46,15 +55,15 @@ download_mock_dataset:
 run_tests: download_mock_dataset
 	pytest --disable-warnings -sv tests
 	pytest --disable-warnings --doctest-modules --doctest-continue-on-failure -sv oml
-	#$(JUPYTER_CMD) --execute examples/visualization.ipynb
+	#$(JUPYTER_CMD) --execute pipelines/features_extraction/visualization.ipynb
 
 .PHONY: test_converters
 test_converters:
 	clear
-	export PYTHONWARNINGS=ignore; python examples/datasets_converters/convert_cub.py     --dataset_root  data/CUB_200_2011
-	export PYTHONWARNINGS=ignore; python examples/datasets_converters/convert_sop.py     --dataset_root  data/Stanford_Online_Products
-	export PYTHONWARNINGS=ignore; python examples/datasets_converters/convert_cars.py    --dataset_root  data/CARS196
-	export PYTHONWARNINGS=ignore; python examples/datasets_converters/convert_inshop.py  --dataset_root  data/DeepFashion_InShop
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_cub.py     --dataset_root  data/CUB_200_2011
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_sop.py     --dataset_root  data/Stanford_Online_Products
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_cars.py    --dataset_root  data/CARS196
+	export PYTHONWARNINGS=ignore; python pipelines/datasets_converters/convert_inshop.py  --dataset_root  data/DeepFashion_InShop
 
 .PHONY: run_precommit
 run_precommit:

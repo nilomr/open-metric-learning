@@ -1,0 +1,59 @@
+accelerator: cpu
+devices: 1
+
+dataset_root: path_to_replace  # we will replace it in runtime with the default dataset folder
+dataframe_name: df.csv
+
+transforms_val:
+  name: norm_resize_torch
+  args:
+    im_size: 48
+
+logs_root: logs
+
+num_workers: 0
+
+bs_val: 2
+
+postprocessor:
+  name: pairwise_images
+  args:
+    top_n: 3
+    pairwise_model:
+      name: trivial_distance_siamese
+      args:
+        extractor:
+          name: resnet
+          args:
+            arch: resnet50_projector
+            gem_p: 7.0
+            remove_fc: True
+            normalise_features: False
+            weights: resnet50_moco_v2
+    transforms:
+      name: norm_resize_torch
+      args:
+        im_size: 64
+    num_workers: 0
+    batch_size: 4
+    verbose: True
+
+metric_args:
+  metrics_to_exclude_from_visualization: [cmc,]
+  cmc_top_k: [1, 5]
+  map_top_k: [5]
+  precision_top_k: [1, 5]
+  return_only_main_category: False
+  visualize_only_main_category: True
+
+extractor:
+  name: vit
+  args:
+    arch: vits16
+    normalise_features: False
+    use_multi_scale: True
+    weights: vits16_dino
+
+hydra:
+  run:
+    dir: ${logs_root}
