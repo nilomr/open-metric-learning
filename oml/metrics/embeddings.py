@@ -40,7 +40,7 @@ from oml.functional.metrics import (
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.retrieval import IDistancesPostprocessor
 from oml.metrics.accumulation import Accumulator
-from oml.utils.images.images import get_img_with_bbox, square_pad
+from oml.utils.images.images import centre_square_crop, get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
@@ -134,10 +134,19 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.visualize_only_main_category = visualize_only_main_category
         self.return_only_main_category = return_only_main_category
 
-        self.metrics_to_exclude_from_visualization = ["fnmr@fmr", "pcf", *metrics_to_exclude_from_visualization]
+        self.metrics_to_exclude_from_visualization = [
+            "fnmr@fmr",
+            "pcf",
+            *metrics_to_exclude_from_visualization,
+        ]
         self.verbose = verbose
 
-        keys_to_accumulate = [self.embeddings_key, self.is_query_key, self.is_gallery_key, self.labels_key]
+        keys_to_accumulate = [
+            self.embeddings_key,
+            self.is_query_key,
+            self.is_gallery_key,
+            self.labels_key,
+        ]
         if self.categories_key:
             keys_to_accumulate.append(self.categories_key)
         if self.extra_keys:
@@ -168,7 +177,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
         mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
         mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-        distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+        distance_matrix = calc_distance_matrix(
+            embeddings=embeddings, is_query=is_query, is_gallery=is_gallery
+        )
 
         self.distance_matrix, self.mask_gt = apply_mask_to_ignore(
             distances=distance_matrix, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore
@@ -177,7 +188,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         validate_dataset(mask_gt=self.mask_gt, mask_to_ignore=mask_to_ignore)
 
         if self.postprocessor:
-            self.distance_matrix = self.postprocessor.process_by_dict(self.distance_matrix, data=self.acc.storage)
+            self.distance_matrix = self.postprocessor.process_by_dict(
+                self.distance_matrix, data=self.acc.storage
+            )
 
     def compute_metrics(self) -> TMetricsDict_ByLabels:  # type: ignore
         if not self.acc.is_storage_full():
@@ -209,7 +222,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         )
 
         embeddings = self.acc.storage[self.embeddings_key]
-        metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, **args_topological_metrics))
+        metrics[self.overall_categories_key].update(
+            calc_topological_metrics(embeddings, **args_topological_metrics)
+        )
 
         if self.categories_key is not None:
             categories = np.array(self.acc.storage[self.categories_key])
@@ -228,7 +243,11 @@ class EmbeddingMetrics(IMetricVisualisable):
                 )
 
                 mask = categories == category
-                metrics[category].update(calc_topological_metrics(embeddings[mask], **args_topological_metrics))
+                metrics[category].update(
+                    calc_topological_metrics(
+                        embeddings[mask], **args_topological_metrics
+                    )
+                )
 
         self.metrics_unreduced = metrics  # type: ignore
         self.metrics = reduce_metrics(metrics)  # type: ignore
@@ -250,18 +269,37 @@ class EmbeddingMetrics(IMetricVisualisable):
         """
         Visualize worst queries by metrics.
         """
-        metrics_flat = flatten_dict(self.metrics, ignored_keys=self.metrics_to_exclude_from_visualization)
+        metrics_flat = flatten_dict(
+            self.metrics, ignored_keys=self.metrics_to_exclude_from_visualization
+        )
         figures = []
         titles = []
         for metric_name in metrics_flat:
-            if self.visualize_only_main_category and not metric_name.startswith(OVERALL_CATEGORIES_KEY):
+            if self.visualize_only_main_category and not metric_name.startswith(
+                OVERALL_CATEGORIES_KEY
+            ):
                 continue
             fig = self.get_plot_for_worst_queries(
-                metric_name=metric_name, n_queries=LOG_TOPK_ROWS_PER_METRIC, n_instances=LOG_TOPK_IMAGES_PER_ROW
+                metric_name=metric_name,
+                n_queries=LOG_TOPK_ROWS_PER_METRIC,
+                n_instances=LOG_TOPK_IMAGES_PER_ROW,
             )
-            log_str = f"top {LOG_TOPK_ROWS_PER_METRIC} worst by {metric_name}".replace("/", "_")
+            log_str = f"top {LOG_TOPK_ROWS_PER_METRIC} worst by {metric_name}".replace(
+                "/", "_"
+            )
             figures.append(fig)
             titles.append(log_str)
+            fig = self.get_plot_for_best_queries(
+                metric_name=metric_name,
+                n_queries=LOG_TOPK_ROWS_PER_METRIC,
+                n_instances=LOG_TOPK_IMAGES_PER_ROW,
+            )
+            log_str = f"top {LOG_TOPK_ROWS_PER_METRIC} best by {metric_name}".replace(
+                "/", "_"
+            )
+            figures.append(fig)
+            titles.append(log_str)
+
         return figures, titles
 
     def ready_to_visualize(self) -> bool:
@@ -269,15 +307,39 @@ class EmbeddingMetrics(IMetricVisualisable):
 
     def get_worst_queries_ids(self, metric_name: str, n_queries: int) -> List[int]:
         metric_values = flatten_dict(self.metrics_unreduced)[metric_name]  # type: ignore
-        return torch.topk(metric_values, min(n_queries, len(metric_values)), largest=False)[1].tolist()
+        return torch.topk(
+            metric_values, min(n_queries, len(metric_values)), largest=False
+        )[1].tolist()
+
+    def get_best_queries_ids(self, metric_name: str, n_queries: int) -> List[int]:
+        metric_values = flatten_dict(self.metrics_unreduced)[metric_name]
+        return torch.topk(
+            metric_values, min(n_queries, len(metric_values)), largest=True
+        )[1].tolist()
 
     def get_plot_for_worst_queries(
         self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
     ) -> plt.Figure:
-        query_ids = self.get_worst_queries_ids(metric_name=metric_name, n_queries=n_queries)
-        return self.get_plot_for_queries(query_ids=query_ids, n_instances=n_instances, verbose=verbose)
+        query_ids = self.get_worst_queries_ids(
+            metric_name=metric_name, n_queries=n_queries
+        )
+        return self.get_plot_for_queries(
+            query_ids=query_ids, n_instances=n_instances, verbose=verbose
+        )
 
-    def get_plot_for_queries(self, query_ids: List[int], n_instances: int, verbose: bool = True) -> plt.Figure:
+    def get_plot_for_best_queries(
+        self, metric_name: str, n_queries: int, n_instances: int, verbose: bool = False
+    ) -> plt.Figure:
+        query_ids = self.get_best_queries_ids(
+            metric_name=metric_name, n_queries=n_queries
+        )
+        return self.get_plot_for_queries(
+            query_ids=query_ids, n_instances=n_instances, verbose=verbose
+        )
+
+    def get_plot_for_queries(
+        self, query_ids: List[int], n_instances: int, verbose: bool = True
+    ) -> plt.Figure:
         """
         Visualize the predictions for the query with the indicies <query_ids>.
 
@@ -287,7 +349,9 @@ class EmbeddingMetrics(IMetricVisualisable):
             verbose: wether to show image paths or not
 
         """
-        assert self.metrics is not None, "We are not ready to plot, because metrics were not calculated yet."
+        assert (
+            self.metrics is not None
+        ), "We are not ready to plot, because metrics were not calculated yet."
 
         is_query = self.acc.storage[self.is_query_key]
         is_gallery = self.acc.storage[self.is_gallery_key]
@@ -308,12 +372,19 @@ class EmbeddingMetrics(IMetricVisualisable):
             fake_coord = np.array([float("nan")] * len(is_query))
             bboxes = list(zip(fake_coord, fake_coord, fake_coord, fake_coord))
         else:
-            raise KeyError(f"Not all the keys collected in storage! {[*self.acc.storage]}")
+            raise KeyError(
+                f"Not all the keys collected in storage! {[*self.acc.storage]}"
+            )
 
         query_bboxes = torch.tensor(bboxes)[is_query]
         gallery_bboxes = torch.tensor(bboxes)[is_gallery]
 
-        fig = plt.figure(figsize=(16, 16 / (n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1) * len(query_ids)))
+        fig = plt.figure(
+            figsize=(
+                16,
+                16 / (n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1) * len(query_ids),
+            )
+        )
         for j, query_idx in enumerate(query_ids):
             ids = torch.argsort(self.distance_matrix[query_idx])[:n_instances]
 
@@ -325,8 +396,10 @@ class EmbeddingMetrics(IMetricVisualisable):
                 j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + 1,
             )
 
-            img = get_img_with_bbox(query_paths[query_idx], query_bboxes[query_idx], BLUE)
-            img = square_pad(img)
+            img = get_img_with_bbox(
+                query_paths[query_idx], query_bboxes[query_idx], BLUE
+            )
+            img = centre_square_crop(img)
 
             if verbose:
                 print("Q  ", query_paths[query_idx])
@@ -345,8 +418,10 @@ class EmbeddingMetrics(IMetricVisualisable):
                     j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + 2,
                 )
                 img = get_img_with_bbox(gallery_paths[idx], gallery_bboxes[idx], color)
-                img = square_pad(img)
-                plt.title(f"{i} - {round(self.distance_matrix[query_idx, idx].item(), 3)}")
+                img = centre_square_crop(img)
+                plt.title(
+                    f"{i} - {round(self.distance_matrix[query_idx, idx].item(), 3)}"
+                )
                 plt.imshow(img)
                 plt.axis("off")
 
@@ -356,11 +431,19 @@ class EmbeddingMetrics(IMetricVisualisable):
                 plt.subplot(
                     len(query_ids),
                     n_instances + N_GT_SHOW_EMBEDDING_METRICS + 1,
-                    j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS) + i + n_instances + 2,
+                    j * (n_instances + 1 + N_GT_SHOW_EMBEDDING_METRICS)
+                    + i
+                    + n_instances
+                    + 2,
                 )
-                img = get_img_with_bbox(gallery_paths[gt_idx], gallery_bboxes[gt_idx], GRAY)
-                img = square_pad(img)
-                plt.title("GT " + str(round(self.distance_matrix[query_idx, gt_idx].item(), 3)))
+                img = get_img_with_bbox(
+                    gallery_paths[gt_idx], gallery_bboxes[gt_idx], GRAY
+                )
+                img = centre_square_crop(img)
+                plt.title(
+                    "GT "
+                    + str(round(self.distance_matrix[query_idx, gt_idx].item(), 3))
+                )
                 plt.imshow(img)
                 plt.axis("off")
 

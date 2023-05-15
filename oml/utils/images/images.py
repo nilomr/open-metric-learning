@@ -95,7 +95,29 @@ def get_img_with_bbox(im_path: str, bbox: torch.Tensor, color: TColor) -> np.nda
 
 
 def square_pad(img: np.ndarray) -> np.ndarray:
-    return pad(img, min_height=max(img.shape), min_width=max(img.shape), border_mode=0, value=PAD_COLOR)
+    return pad(
+        img,
+        min_height=max(img.shape),
+        min_width=max(img.shape),
+        border_mode=0,
+        value=PAD_COLOR,
+    )
+
+
+def centre_square_crop(img: np.ndarray) -> np.ndarray:
+    """
+    Crops the image to a square and then resizes it to the given size.
+
+    Args:
+        img: Image
+        size: Size of the output image
+    """
+    h, w = img.shape[:2]
+    if h > w:
+        img = img[(h - w) // 2 : (h + w) // 2, :, :]
+    else:
+        img = img[:, (w - h) // 2 : (w + h) // 2, :]
+    return img
 
 
 __all__ = [
