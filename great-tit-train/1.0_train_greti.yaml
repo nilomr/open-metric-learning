@@ -1,7 +1,7 @@
 postfix: metric_learning
 
 seed: 42
-precision: 32
+precision: 16
 accelerator: gpu
 devices: 1
 
@@ -26,8 +26,8 @@ transforms_val:
 sampler:
   name: balance
   args:
-    n_labels: 8
-    n_instances: 4
+    n_labels: 20
+    n_instances: 5
 
 bs_val: 256
 max_epochs: 400 # was 1000
@@ -50,7 +50,7 @@ metric_for_checkpointing: OVERALL/cmc/1
 extractor:
   name: vit
   args:
-    normalise_features: False
+    normalise_features: True
     use_multi_scale: False
     weights: vits16_dino
     arch: vits16
