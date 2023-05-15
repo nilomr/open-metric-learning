@@ -234,7 +234,7 @@ def vis_vit(
         F.interpolate(
             attentions.unsqueeze(0),
             scale_factor=patch_size,
-            mode="bicubic",
+            mode="nearest",
         )[0]
         .clamp(min=0, max=255)
         .cpu()
@@ -245,12 +245,7 @@ def vis_vit(
     heatmap_norm = (heatmap - heatmap.min()) / (heatmap.max() - heatmap.min())
     heatmap_viridis = plt.cm.viridis(heatmap_norm)[:, :, :3]  # Remove alpha channel
 
-    arr = show_cam_on_image(image / image.max(), 0.6 * arr / arr.max())  # type: ignore
-
-    if need_to_convert:
-        arr = PIL.Image.fromarray(arr)
-
-    return arr
+    return heatmap_viridis
 
 
 __all__ = ["ViTExtractor", "vis_vit"]
