@@ -1,8 +1,11 @@
 from pathlib import Path
+from time import strftime
 
 import albumentations as albu
+import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 from oml.const import MEAN, STD, TNormParam
 from oml.models.vit.vit import ViTExtractor
@@ -23,8 +26,8 @@ df_path = data_dir / "df.csv"
 image_paths = list(train_folder.glob("*/*.jpg"))
 labels = [path.parent.name for path in image_paths]
 
-best_model = "GRETI2023-03-05_22-42-42_metric_learning"
-best_model_path = root / "logs" / best_model / "checkpoints" / "best.ckpt"
+best_model = "2023-05-15_11-38-59_metric_learning"
+best_model_path = root / "logs" / dataset / best_model / "checkpoints" / "best.ckpt"
 
 
 extractor = ViTExtractor(
@@ -35,8 +38,6 @@ extractor = ViTExtractor(
 
 
 # import image from image_paths as ndarray:
-
-
 def get_greti_augs_val(
     im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> albu.Compose:
@@ -126,17 +127,16 @@ fig = plot_images_with_attention(
     imagepaths, num_cols, image_size, fig_size, aspect_ratio
 )
 
-from time import strftime
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 
 # generate a new name for the figure each time
 time = strftime("%Y%m%d_%H%M%S")
+fig_dir = root / "outputs" / "figures"
+fig_dir.mkdir(parents=True, exist_ok=True)
 pdf_filename = f"attention_plot_{time}.pdf"
 png_filename = f"attention_plot_{time}.png"
 
-with PdfPages(pdf_filename) as pdf:
+with PdfPages(fig_dir / pdf_filename) as pdf:
     pdf.savefig(fig)
 
 # also save the figure as a png
-fig.savefig(png_filename)
+fig.savefig(fig_dir / png_filename)
